@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
 
     steps:
 
@@ -44,19 +44,29 @@ jobs:
       with:
         name: Jacoco coverage results
         path: target/site/jacoco
+    - name: Cache build
+      uses: actions/cache@v3
+      with:
+        key: cached-build-${{github.sha}}
+        path: .
 
   # Uploads dependency graph to GitHub to receive Dependabot alerts 
   update_dependence_graph:
-
+    
     needs: [maven_test]  # Enforces that maven_test runs first
-
+    
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
 
     steps:
-
+    - name: Restore cached build
+      uses: actions/cache@v3
+      with:
+        key: cached-build-${{github.sha}}
+        path: .
     # https://github.com/marketplace/actions/maven-dependency-tree-dependency-submission
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v3
+    
