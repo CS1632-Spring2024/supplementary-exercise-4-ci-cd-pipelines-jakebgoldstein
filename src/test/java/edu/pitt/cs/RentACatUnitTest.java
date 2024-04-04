@@ -370,6 +370,8 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testReturnFailureCatNumCats3() {
+		// [x] TODO: Fill in
+
 		// Preconditions
 		r.addCat(c1);
 		r.addCat(c2);
