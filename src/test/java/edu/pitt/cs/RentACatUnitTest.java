@@ -18,7 +18,7 @@ import java.lang.reflect.Method;
 public class RentACatUnitTest {
     RentACat r;
     Cat c1, c2, c3;
-    ByteArrayOutputStream out;
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     PrintStream stdout;
     String newline = System.lineSeparator();
 
@@ -27,14 +27,24 @@ public class RentACatUnitTest {
         r = RentACat.createInstance(InstanceType.IMPL);
 
         c1 = Cat.createInstance(InstanceType.MOCK, 1, "Jennyanydots");
-        c2 = Cat.createInstance(InstanceType.MOCK, 2, "Old Deuteronomy");
-        c3 = Cat.createInstance(InstanceType.MOCK, 3, "Mistoffelees");
+        Mockito.when(c1.getId()).thenReturn(1);
+        Mockito.when(c1.getRented()).thenReturn(false);
+        Mockito.when(c1.getName()).thenReturn("Old Deuteronomy");
 
-        Mockito.when(c2.getName()).thenReturn("Old Deuteronomy");
+        c2 = Cat.createInstance(InstanceType.MOCK, 2, "Old Deuteronomy");
         Mockito.when(c2.getId()).thenReturn(2);
         Mockito.when(c2.getRented()).thenReturn(false);
+        Mockito.when(c2.getName()).thenReturn("Old Deuteronomy");
 
-        out = new ByteArrayOutputStream();
+        c3 = Cat.createInstance(InstanceType.MOCK, 3, "Mistoffelees");
+        Mockito.when(c3.getId()).thenReturn(3);
+        Mockito.when(c3.getRented()).thenReturn(false);
+        Mockito.when(c3.getName()).thenReturn("Old Deuteronomy");
+
+        Mockito.when(c1.toString()).thenReturn("ID 1. Jennyanydots");
+        Mockito.when(c2.toString()).thenReturn("ID 2. Old Deuteronomy");
+        Mockito.when(c3.toString()).thenReturn("ID 3. Mistoffelees");
+
         stdout = System.out;
         System.setOut(new PrintStream(out));
     }
@@ -49,36 +59,30 @@ public class RentACatUnitTest {
     }
 
     @Test
-    public void testGetCatNullNumCats0() {
-        try {
-            Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-            method.setAccessible(true);
-            Object result = method.invoke(r, 2);
-            assertNull(result);
-        } catch (Exception e) {
-            fail("Exception occurred: " + e.getMessage());
-        }
+    public void testGetCatNullNumCats0() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Method m = r.getClass().getDeclaredMethod("getCat", int.class);
+        m.setAccessible(true);
+        Object ret = m.invoke(r , 2);
+        assertNull(ret);
+        assertEquals("Invalid cat ID." + newline, out.toString());
     }
 
     @Test
-    public void testGetCatNumCats3() {
+    public void testGetCatNumCats3() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Class<? extends RentACat> className = r.getClass();
         r.addCat(c1);
         r.addCat(c2);
         r.addCat(c3);
-        try {
-            Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-            method.setAccessible(true);
-            Cat result = (Cat) method.invoke(r, 2);
-            assertNotNull(result);
-            assertEquals(2, result.getId());
-        } catch (Exception e) {
-            fail("Exception occurred: " + e.getMessage());
-        }
+        Method m = className.getDeclaredMethod("getCat", int.class);
+        m.setAccessible(true);
+        Cat ret = (Cat) m.invoke(r, 2);
+        assertEquals(2, ret.getId());
     }
 
     @Test
     public void testListCatsNumCats0() {
-        assertEquals("", r.listCats());
+        String ret = r.listCats();
+        assertEquals("", ret);
     }
 
     @Test
@@ -86,17 +90,14 @@ public class RentACatUnitTest {
         r.addCat(c1);
         r.addCat(c2);
         r.addCat(c3);
-        String expectedOutput = "ID 1. Jennyanydots" + newline
-                              + "ID 2. Old Deuteronomy" + newline
-                              + "ID 3. Mistoffelees" + newline;
-        assertEquals(expectedOutput, r.listCats());
+        String ret = r.listCats();
+        assertEquals("ID 1. Jennyanydots\nID 2. Old Deuteronomy\nID 3. Mistoffelees\n", ret);
     }
 
     @Test
     public void testRenameFailureNumCats0() {
-        boolean result = r.renameCat(2, "Garfield");
-        assertEquals(false, result);
-        assertNotEquals("Garfield", c2.getName());
+        assertFalse(r.renameCat(2, "Garfield"));
+        assertNotEquals(c2.getName(), "Garfield");
         assertEquals("Invalid cat ID." + newline, out.toString());
     }
 
@@ -105,9 +106,10 @@ public class RentACatUnitTest {
         r.addCat(c1);
         r.addCat(c2);
         r.addCat(c3);
-        boolean result = r.renameCat(2,"Garfield");
-        assertTrue(result);
-        Mockito.verify(c2, Mockito.atLeastOnce()).renameCat("Garfield");
+        Mockito.when(c2.getId()).thenReturn(2);
+        boolean ret = r.renameCat(2, "Garfield");
+        Mockito.verify(c2).renameCat("Garfield");
+        assertTrue(ret);
     }
 
     @Test
