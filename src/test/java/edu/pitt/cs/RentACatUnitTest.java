@@ -13,6 +13,7 @@ import static org.mockito.Mockito.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RentACatUnitTest {
