@@ -23,8 +23,11 @@ jobs:
 
     # The uses: keyword invokes a GitHub action:
     # https://github.com/marketplace/actions/checkout
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Restore cached build
+      uses: actions/cache@v3
+      with:
+        key: cached-build-${{github.sha}}
+        path: .
 
     # This invokes the Setup Java JDK GitHub action:
     # https://github.com/marketplace/actions/setup-java-jdk
