@@ -124,25 +124,20 @@ public class RentACatImpl implements RentACat {
 	 * @return Cat searched for if exists, null otherwise
 	 */
 
-	private Cat getCat(int id) {
-
-		// null check
+	private Cat getCat(int id) 
+	{
 		if (cats == null) {
 		return null;
 		}
 
 		// Loop through every cat in the cat list
-		for (Cat c : cats) {
-		// If we found a cat whose id matches the id
-		// of the argument, then we have a match and
-		// can thus return a reference to that cat
-		if (c.getId() == id) {
+		for (Cat c : cats) 
+		{
+		if (c.getId() == id) 
+		{
 		return c;
 		}
 		}
-		// If we get all the way through the list and did
-		// not find a cat whose ID matches the passed-in
-		// ID, then the cat is not in the list
 		System.out.println("Invalid cat ID.");
 		return null;
 
