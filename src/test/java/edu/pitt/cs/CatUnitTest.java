@@ -37,8 +37,6 @@ public class CatUnitTest {
 
 	@After
 	public void tearDown() throws Exception {
-		// Not necessary strictly speaking since the references will be overwritten in
-		// the next setUp call anyway and Java has automatic garbage collection.
 		c = null;
 	}
 
