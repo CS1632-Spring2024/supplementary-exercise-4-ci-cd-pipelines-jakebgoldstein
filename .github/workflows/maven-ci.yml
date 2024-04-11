@@ -10,96 +10,74 @@ on:
     branches: [ "main" ]
 
 jobs:
-  
   # Runs the Maven test phase on the project
   maven_test:
-
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
 
-    # The uses: keyword invokes a GitHub action:
-    # https://github.com/marketplace/actions/checkout
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: maven
 
-    # This invokes the Setup Java JDK GitHub action:
-    # https://github.com/marketplace/actions/setup-java-jdk
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'zulu'
-        cache: maven
+      - name: Test with Maven
+        run: mvn test
 
-    - name: Test with Maven
-      run: mvn test
+      - name: Upload jacoco results as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Jacoco coverage results
+          path: target/site/jacoco
 
-    # https://github.com/marketplace/actions/upload-a-build-artifact
-    - name: Upload jacoco results as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: Jacoco coverage results
-        path: target/site/jacoco
-    - name: Cache build
-      uses: actions/cache@v3
-      with:
-        key: cached-build-${{github.sha}}
-        path: .
-
-  # Uploads dependency graph to GitHub to receive Dependabot alerts 
-  update_dependence_graph:
-    
-    needs: [maven_test]  # Enforces that maven_test runs first
-    
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
-    steps:
-    - name: Restore cached build
-      uses: actions/cache@v3
-      with:
-        key: cached-build-${{github.sha}}
-        path: .
-    # https://github.com/marketplace/actions/maven-dependency-tree-dependency-submission
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@v3
-
-  build:
-    name: Build and analyze
-    needs: [maven_test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restore cached build
+      - name: Cache build
         uses: actions/cache@v3
         with:
           key: cached-build-${{github.sha}}
           path: .
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
+
+      # SonarCloud analysis
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+
       - name: Build and analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=CS1632-Spring2024_supplementary-exercise-4-ci-cd-pipelines-jakebgoldstein
-    
+
+  # Uploads dependency graph to GitHub to receive Dependabot alerts 
+  update_dependence_graph:
+    needs: [maven_test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Restore cached build
+        uses: actions/cache@v3
+        with:
+          key: cached-build-${{github.sha}}
+          path: .
+      
+      - name: Update dependency graph
+        uses: advanced-security/maven-dependency-submission-action@v3
